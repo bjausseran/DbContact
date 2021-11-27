@@ -18,6 +18,7 @@ class BDDCONTACTLIBRARY_EXPORT DatabaseManager : public QObject
     QSqlDatabase db;
     CsvManager *csv;
 
+
     bool createTable();
 
 public:
@@ -34,6 +35,7 @@ public:
     void ReadFile(QString path);
 
     int selectDistinct(QString field);
+
 
 signals:
     void requestCsvCreation(Contact contacts[], QString filename);

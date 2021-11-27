@@ -4,6 +4,8 @@
 #include <QTextStream>
 #include <QDebug>
 
+
+
 CsvManager::CsvManager(QObject *parent) : QObject(parent)
 {
 

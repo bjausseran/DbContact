@@ -283,6 +283,8 @@ QList<QStringList> DatabaseManager::selectAll()
     return list;
 }
 
+
+
 bool DatabaseManager::createTable()
 {
 
