@@ -8,6 +8,7 @@ class ContactTest : public QObject
 {
     Q_OBJECT
     DatabaseManager *dbManager;
+    int _testState=1;
 
 public:
     ContactTest();
@@ -50,13 +51,27 @@ void ContactTest::cleanupTestCase()
 
 void ContactTest::test_case1(QStringList requestList)
 {
-QString string;
-    for(int i=0; i<requestList.size(); i++)
-       {
-        string += requestList[i];
+    QString string;
+    if(_testState==2){
+        for(int i=0; i<requestList.size(); i++)
+        {
+            string += requestList[i];
         }
-    qDebug() <<__FUNCTION__ << string;
-    QCOMPARE(string, "1TestGUIDfirstnamelastnameemailtelcategorycitybirth_daycountrylistcompany");
+        _testState=3;
+        qDebug() <<__FUNCTION__ <<"Test2 "<< string;
+        QCOMPARE(string, "");
+    }
+    if(_testState==1){
+        for(int i=0; i<requestList.size(); i++)
+        {
+            string += requestList[i];
+        }
+        qDebug() <<__FUNCTION__ <<"Test1 "<< string;
+        QCOMPARE(string, "1TestGUIDfirstnamelastnameemailtelcategorycitybirth_daycountrylistcompany");
+        dbManager->deleteData("id","1");
+        _testState=2;
+        dbManager->requestData("id","1");
+    }
 }
 
 QTEST_MAIN(ContactTest)
