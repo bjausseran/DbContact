@@ -17,7 +17,7 @@ GUI :
 - Recherche par champs et valeur
 - Supprimer/Modifier le contact selectionner
 - Exporter le tableau en CSV (on peut choisir le chemin, on a préféré à AppData, la bdd est dans AppData)
-- La progresse bar est seulement active pour l'export de CSV.
+- La progress bar est seulement active pour l'export de CSV.
 
 ### Utilisation
 
