@@ -2,17 +2,20 @@
 #define CSVMANAGER_H
 
 #include <QFile>
+#include <QFuture>
 #include <QObject>
 #include "contact.h"
+#include <QThread>
 
 class CsvManager : public QObject
 {
     Q_OBJECT
 public:
     explicit CsvManager(QObject *parent = nullptr);
-    void readCsvfile(QString path);
+    QFuture<QStringList> readCsvfile(QString path);
     void writeCsvFile(Contact contacts[], QString fileName);
 
+    void writeCsvFile(QList<Contact*> contacts, QString fileName);
 signals:
     void fileRead(QStringList data);
     void fileWrote(QString file);
