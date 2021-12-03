@@ -7,6 +7,8 @@
 #include <QtConcurrent>
 #include <QDirIterator>
 
+
+
 CsvManager::CsvManager(QObject *parent) : QObject(parent)
 {
 
@@ -84,7 +86,6 @@ void CsvManager::writeCsvFile(Contact contacts[], QString fileName)
     }
     emit fileWrote(fileName);
 }
-
 void CsvManager::writeCsvFile(QList<Contact*> contacts, QString fileName)
 {
     QFile file(fileName);

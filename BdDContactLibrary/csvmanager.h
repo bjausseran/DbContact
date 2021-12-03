@@ -7,15 +7,16 @@
 #include "contact.h"
 #include <QThread>
 
-class CsvManager : public QObject
+class BDDCONTACTLIBRARY_EXPORT CsvManager : public QObject
 {
     Q_OBJECT
+
 public:
     explicit CsvManager(QObject *parent = nullptr);
     QFuture<QStringList> readCsvfile(QString path);
     void writeCsvFile(Contact contacts[], QString fileName);
-
     void writeCsvFile(QList<Contact*> contacts, QString fileName);
+
 signals:
     void fileRead(QStringList data);
     void fileWrote(QString file);
