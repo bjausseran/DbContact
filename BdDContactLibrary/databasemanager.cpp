@@ -71,12 +71,20 @@ void DatabaseManager::updateData(QStringList fieldsSearched, QStringList fieldsV
 
 void DatabaseManager::ReadFile(QString path)
 {
-    QDirIterator it(path, {"*.csv"}, QDir::Files);
+    qDebug() << __FUNCTION__ << __LINE__ << "PATH : " << path;
+    if(path.contains(".csv"))
+    {
+        csv->readCsvfile(path);
+    }
+    else
+    {
+        QDirIterator it(path, {"*.csv"}, QDir::Files);
 
-    qDebug() << __FUNCTION__ << __LINE__ << path;
+        qDebug() << __FUNCTION__ << __LINE__ << path;
 
-    while (it.hasNext()) {
-        csv->readCsvfile(it.next());
+        while (it.hasNext()) {
+            csv->readCsvfile(it.next());
+        }
     }
 }
 

@@ -42,6 +42,14 @@ void ContactTest::initTestCase()
 
     QObject::connect(dbManager, &DatabaseManager::sendContactData, this, &ContactTest::test_case1);
     dbManager->ReadFile("../../DbContact/TestFolder/myFile4.csv");
+
+    QElapsedTimer *timer = new QElapsedTimer();
+    timer->start();
+    while(timer->elapsed() < 5000)
+    {
+
+    }
+
     dbManager->requestData("id","1");
 
 
