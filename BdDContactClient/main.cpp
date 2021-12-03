@@ -13,8 +13,15 @@ int main(int argc, char *argv[])
 
     DatabaseManager *dbMana = new DatabaseManager();
 
+    QObject::connect(&w, &MainWindow::loadCsv, &w, [dbMana](QString path){dbMana->ReadFile(path);;});
+    QObject::connect(&w, &MainWindow::exportCsv, dbMana, &DatabaseManager::onExportCsvRequest);
     QObject::connect(&w, &MainWindow::requestContactList, &w, [dbMana]{dbMana->selectAll();;});
+
+    QObject::connect(&w, &MainWindow::filterData, dbMana,[dbMana](QString field, QString value){dbMana->requestDataList(field,value);});
+
     QObject::connect(dbMana, &DatabaseManager::addResults, &w, &MainWindow::addResults);
+    QObject::connect(dbMana, &DatabaseManager::addStats, &w, &MainWindow::addStats);
+    QObject::connect(dbMana, &DatabaseManager::countDown, &w, &MainWindow::onProgressReceived);
 
     QObject::connect(&w, &MainWindow::requestContactData, dbMana, [dbMana](int id){dbMana->requestData("id",QString::number(id));});
     QObject::connect(dbMana, &DatabaseManager::sendContactData, &w, &MainWindow::onContactDataReceived);
@@ -25,7 +32,7 @@ int main(int argc, char *argv[])
 
     //____________________________________________________________________
     //                       Read file, import in DB
-    //dbMana->ReadFile("C:/CSVs/myFile0.csv");
+    //dbMana->ReadFile("C:/CSVs/");
 
 
     //____________________________________________________________________
@@ -39,7 +46,7 @@ int main(int argc, char *argv[])
 
     //____________________________________________________________________
     //                       Display every contact in the base
-    dbMana->selectAll();
+    //dbMana->selectAll();
 
     //____________________________________________________________________
     //                       Clean out DB

@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+
 void MainWindow::addLine(QStringList values)
 {
     int nbItem = tableWidget->rowCount();
@@ -22,11 +23,30 @@ void MainWindow::addLine(QStringList values)
     tableWidget->setItem(nbItem, 4, company);
 }
 
+void MainWindow::addLines(QList<QStringList> values)
+{
+    QStringList value;
+    foreach(value, values)
+    {
+        addLine(value);
+    }
+}
 void MainWindow::refreshUI()
 {
     tableWidget->clearContents();
     tableWidget->setRowCount(0);
-    emit requestContactList();
+
+    auto field = lookupField->text();
+    auto value = lookupValue->text();
+
+    if(field == value && value == "")
+    {
+        emit requestContactList();
+    }
+    if(field == "" || !checkField(field)) return;
+    if(value == "") return;
+
+    emit filterData(field, lookupValue->text());
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -48,11 +68,19 @@ MainWindow::MainWindow(QWidget *parent)
     listLabel = ui->form_list_edit;
     companyLabel = ui->form_company_edit;
 
+    csvFolderEdit = ui->loadCsv_edit;
+
+    lookupField = ui->lookupField_edit;
+    lookupValue = ui->lookupValue_edit;
+
+    csvExportPath = ui->exportPath_edit;
+
     nbLineLabel = ui->nbLine_edit;
     nbCategoryLabel = ui->nbCategory_edit;
     nbCompanyLabel = ui->nbCompany_edit;
     nbListLabel = ui->nbList_edit;
 
+    progressBar = ui->progressBar;
 
     createTableLayout();
 }
@@ -90,9 +118,8 @@ void MainWindow::onContactDataReceived(QStringList list)
 void MainWindow::createTableLayout()
 {
     tableWidget->setColumnCount(5);
-    tableWidget->setColumnWidth(0, 50);
-    //tableWidget->setColumnWidth(1, 180);
-    //connect( tableWidget, &QAbstractItemView::doubleClicked, this, &MainWindow::set);
+    tableWidget->setColumnWidth(0, 80);
+
     this->tableWidget->setEditTriggers(QTableWidget::NoEditTriggers);
 
     connect(tableWidget, &QAbstractItemView::doubleClicked, this, &MainWindow::onContactSelected);
@@ -105,18 +132,25 @@ void MainWindow::createTableLayout()
 
 }
 
-void MainWindow::addResults(QList<QStringList> values, int nbCategory, int nbCompany, int nbList)
+void MainWindow::addResults(QList<QStringList> values)
 {
-    for(int i = 0; i < values.length(); i++)
-    {
-        addLine(values.at(i));
-    }
-    nbLineLabel->setText(QString::number(values.length()));
+
+    addLines(values);
+}
+
+void MainWindow::addStats(int nbLine, int nbCategory, int nbCompany, int nbList)
+{
+
+    nbLineLabel->setText(QString::number(nbLine));
     nbCategoryLabel->setText(QString::number(nbCategory));
     nbCompanyLabel->setText(QString::number(nbCompany));
     nbListLabel->setText(QString::number(nbList));
 
     emit requestContactData(tableWidget->item(0, 0)->text().toInt());
+}
+void MainWindow::onProgressReceived(int count)
+{
+    progressBar->setValue(count);
 }
 
 void MainWindow::onContactSelected(const QModelIndex &index)
@@ -146,5 +180,48 @@ void MainWindow::on_delete_btn_clicked()
 {
     emit deleteContact(idLabel->text().toInt());
     refreshUI();
+}
+
+
+
+void MainWindow::on_loadCsv_btn_clicked()
+{
+    emit loadCsv(csvFolderEdit->text());
+}
+
+
+void MainWindow::on_filter_btn_clicked()
+{
+    refreshUI();
+}
+
+bool  MainWindow::checkField(QString field)
+{
+    QString string;
+    foreach(string, fields)
+    {
+        if(string == field) return true;
+    }
+    return false;
+}
+
+
+void MainWindow::on_exportCsv_btn_clicked()
+{
+    QString path = csvExportPath->text();
+    int rowCount = tableWidget->rowCount();
+
+    if(path == "" || rowCount == 0) return;
+
+    QStringList tableIds;
+
+    for(int i = 0; i < rowCount; i++)
+    {
+        tableIds.push_back(tableWidget->item(i, 0)->text());
+    }
+
+
+    qDebug() << __FUNCTION__ << __LINE__ << "Id list count : " << tableIds.count();
+    emit exportCsv(tableIds, path);
 }
 

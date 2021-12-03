@@ -1,36 +1,47 @@
 #include "databasemanager.h"
 
 #include <QDir>
+#include <QElapsedTimer>
 #include <QStandardPaths>
 
 DatabaseManager::DatabaseManager(QObject *parent) : QObject(parent)
 {
     csv = new CsvManager();
     connect(csv, &CsvManager::fileRead, this, &DatabaseManager::onFileRead);
+    connect(csv, &CsvManager::countDown, this, &DatabaseManager::countDown);
     connect(this, &DatabaseManager::requestCsvCreation, csv, &CsvManager::onCsvRequested);
 
-    createTable();
+
+    initQuery();
+    //createTable();
 }
 
 void DatabaseManager::deleteData(QString fieldSearch, QString fieldValue)
 {
+    auto db = setupDatabase();
     QSqlQuery query;
     query.prepare("DELETE FROM contacts WHERE " + fieldSearch + " = ?");
     query.addBindValue(fieldValue);
     query.exec();
+    cleanDatabase(db);
 }
 
 void DatabaseManager::updateData(QString fieldSearch, QString searchValue, QString fieldUpdated, QString newValue)
 {
+
+    auto db = setupDatabase();
     QSqlQuery query;
     query.prepare("UPDATE contacts SET " + fieldUpdated + "=:valueUpdate WHERE " + fieldSearch + "=:searchValue;");
     query.bindValue(":valueUpdate", newValue);
     query.bindValue(":searchValue", searchValue);
     query.exec();
+    cleanDatabase(db);
 }
 
 void DatabaseManager::updateData(QStringList fieldsSearched, QStringList fieldsValue, QStringList fieldsUpdated, QStringList newValues)
 {
+
+    auto db = setupDatabase();
     QString whereClause = "";
     for(int i = 0; i < fieldsSearched.length(); i++)
     {
@@ -55,16 +66,24 @@ void DatabaseManager::updateData(QStringList fieldsSearched, QStringList fieldsV
         query.bindValue(":"+fieldsUpdated[i], newValues[i]);
     }
     query.exec();
-
+    cleanDatabase(db);
 }
 
 void DatabaseManager::ReadFile(QString path)
 {
-    csv->readCsvfile(path);
+    QDirIterator it(path, {"*.csv"}, QDir::Files);
+
+    qDebug() << __FUNCTION__ << __LINE__ << path;
+
+    while (it.hasNext()) {
+        csv->readCsvfile(it.next());
+    }
 }
 
 int DatabaseManager::selectDistinct(QString field)
 {
+
+    auto db = setupDatabase();
     QSqlQuery query;
     query.exec("SELECT DISTINCT "+ field +" FROM contacts;");
 
@@ -82,14 +101,12 @@ int DatabaseManager::selectDistinct(QString field)
       qDebug() << __FUNCTION__ << __LINE__ << "RESULT : " << query.first();
 
     return list.length();
+    cleanDatabase(db);
 }
 
 void DatabaseManager::onFileRead(QStringList list)
 {
-    //const int listLenght = list.length();
-    //Contact contacts[listLenght] = {};
     QList<Contact*> *contacts = new QList<Contact*>();
-
 
     for (int i = 0; i < list.length(); i++)
     {
@@ -107,19 +124,18 @@ void DatabaseManager::onFileRead(QStringList list)
         contact->list = wordList.at(10);
         contact->company = wordList.at(11);
 
+
         contacts->append(contact);
     }
 
-    addData(*contacts);
-    for(int i = 0; i < contacts->length(); i++)
-    {
-        delete contacts->at(i);
-    }
+
+    addDataFromList(*contacts);
 }
 
 void DatabaseManager::onUpdateRequest(QStringList fieldsSearched, QStringList fieldsValue, QStringList fieldsUpdated, QStringList newValues)
 {
 
+    auto db = setupDatabase();
     qDebug() << __FUNCTION__ << __LINE__ ;
     QString whereClause = "";
     for(int i = 0; i < fieldsSearched.length(); i++)
@@ -145,10 +161,18 @@ void DatabaseManager::onUpdateRequest(QStringList fieldsSearched, QStringList fi
         query.bindValue(":"+fieldsUpdated[i], newValues[i]);
     }
     query.exec();
+    cleanDatabase(db);
+}
+
+void DatabaseManager::onExportCsvRequest(QStringList idList, QString path)
+{
+
+    qDebug() << __FUNCTION__ << __LINE__ ;
+    selectDataForExport(idList, path);
 }
 
 
-void DatabaseManager::cleanDb() {
+void DatabaseManager::cleanDb(QSqlDatabase &db) {
 
     QSqlQuery query;
     query.exec("DROP TABLE contacts");
@@ -159,74 +183,54 @@ void DatabaseManager::cleanDb() {
     db.close();
 }
 
-
-void DatabaseManager::addData(Contact contacts[])
+void DatabaseManager::addDataFromList(QList<Contact*> contacts)
 {
-
-    QSqlQuery query;
-    query.exec("pragma temp_store = memory");
-    query.exec("PRAGMA synchronous = normal");
-    query.exec("pragma mmap_size = 30000000000");
-    query.exec("PRAGMA journal_mode = wal");
-
+    auto db = setupDatabase();
     db.transaction();
-    query.prepare("INSERT INTO contacts (id, GUID, firstname, lastname, tel, category, city, birth_day, country, list, company)"
-                  "VALUES (:GUID, :firstname, :lastname, :tel, :category, :city, :birth_day, :country, :lis, :company)");
 
-    int lenght = sizeof(contacts)/sizeof (contacts[0]);
-
-    for (int i = 0; i < lenght; i++) {
-
-        query.bindValue(":GUID", contacts[i].GUID);
-        query.bindValue(":firstname", contacts[i].firstname);
-        query.bindValue(":lastname", contacts[i].lastname);
-        query.bindValue(":tel", contacts[i].tel);
-        query.bindValue(":category", contacts[i].category);
-        query.bindValue(":city", contacts[i].city);
-        query.bindValue(":birth_day", contacts[i].birth_day);
-        query.bindValue(":country", contacts[i].country);
-        query.bindValue(":list", contacts[i].list);
-        query.bindValue(":company", contacts[i].company);
-        query.exec();
-    }
-    db.commit();
-}
-void DatabaseManager::addData(QList<Contact*> contacts)
-{
-
+    QSqlQuery insertQuery(db);
     qDebug() << __FUNCTION__ << __LINE__ << contacts.length();
-    QSqlQuery query;
-    query.exec("pragma temp_store = memory");
-    query.exec("PRAGMA synchronous = normal");
-    query.exec("pragma mmap_size = 30000000000");
-    query.exec("PRAGMA journal_mode = wal");
+//    insertQuery.exec("pragma temp_store = memory");
+//    insertQuery.exec("PRAGMA synchronous = normal");
+//    insertQuery.exec("pragma mmap_size = 30000000000");
+//    insertQuery.exec("PRAGMA journal_mode = wal");
 
-    db.transaction();
-    query.prepare("INSERT INTO contacts (GUID, firstname, lastname, email, tel, category, city, birth_day, country, list, company)"
+    insertQuery.prepare("INSERT INTO contacts (GUID, firstname, lastname, email, tel, category, city, birth_day, country, list, company)"
                   "VALUES (:GUID, :firstname, :lastname, :email, :tel, :category, :city, :birth_day, :country, :list, :company)");
 
     //int lenght = sizeof(contacts)/sizeof (contacts[0]);
 
+    auto count = 0;
     for (int i = 0; i < contacts.length(); i++) {
 
-        query.bindValue(":GUID", contacts.at(i)->GUID);
-        query.bindValue(":firstname", contacts.at(i)->firstname);
-        query.bindValue(":lastname", contacts.at(i)->lastname);
-        query.bindValue(":email", contacts.at(i)->email);
-        query.bindValue(":tel", contacts.at(i)->tel);
-        query.bindValue(":category", contacts.at(i)->category);
-        query.bindValue(":city", contacts.at(i)->city);
-        query.bindValue(":birth_day", contacts.at(i)->birth_day);
-        query.bindValue(":country", contacts.at(i)->country);
-        query.bindValue(":list", contacts.at(i)->list);
-        query.bindValue(":company", contacts.at(i)->company);
-        query.exec();
+        insertQuery.bindValue(":GUID", contacts.at(i)->GUID);
+        insertQuery.bindValue(":firstname", contacts.at(i)->firstname);
+        insertQuery.bindValue(":lastname", contacts.at(i)->lastname);
+        insertQuery.bindValue(":email", contacts.at(i)->email);
+        insertQuery.bindValue(":tel", contacts.at(i)->tel);
+        insertQuery.bindValue(":category", contacts.at(i)->category);
+        insertQuery.bindValue(":city", contacts.at(i)->city);
+        insertQuery.bindValue(":birth_day", contacts.at(i)->birth_day);
+        insertQuery.bindValue(":country", contacts.at(i)->country);
+        insertQuery.bindValue(":list", contacts.at(i)->list);
+        insertQuery.bindValue(":company", contacts.at(i)->company);
+        insertQuery.exec();
+
+         emit countDown((contacts.length() + count * 100) / (contacts.length() * 2));
     }
     db.commit();
+
+    cleanDatabase(db);
+        for(int i = 0; i < contacts.count(); i++)
+        {
+            delete contacts.at(i);
+        }
+        //selectAll();
 }
 
 void DatabaseManager::requestData(QString fieldSearched, QString fieldValue)
 {
+    auto db = setupDatabase();
     QSqlQuery query;
 
     query.prepare("SELECT * FROM contacts WHERE " + fieldSearched + " = ?");
@@ -252,77 +256,236 @@ void DatabaseManager::requestData(QString fieldSearched, QString fieldValue)
 
 
     emit sendContactData(list);
-
+    cleanDatabase(db);
 }
 
-QList<QStringList> DatabaseManager::selectAll()
+
+QFuture<void> DatabaseManager::selectDataForExport(QStringList idList, QString path)
 {
-    QSqlQuery query;
+    return QtConcurrent::run([this, idList, path]()
+    {
 
-    int nbCategory = selectDistinct("category");
-    int nbCompany = selectDistinct("company");
-    int nbList = selectDistinct("list");
+        auto db = setupDatabase();
+        QSqlQuery query;
 
-    query.exec("SELECT * FROM contacts");
-
-    if(!query.exec())
-      qWarning() << "ERROR: " << query.lastError().text();
-    QList<QStringList> list;
-
-    while (query.next()) {
-
-        QStringList item;
-            for(int i = 0; i < 12; i++)
-            {
-                //qDebug() << __FUNCTION__ << __LINE__ << query.value(i);
-                item.append(query.value(i).toString());
-            }
-            list.append(item);
+        QString queryId = "(" + idList.at(0);
+        for(int i = 1; i < idList.length(); i++)
+        {
+            queryId.append(", " + idList.value(i));
         }
-    emit addResults(list, nbCategory, nbCompany, nbList);
-    return list;
+        queryId.append(")");
+
+
+        query.prepare("SELECT * FROM contacts WHERE id IN " + queryId);
+        //query.bindValue(":ids", queryId);
+
+        if(!query.exec())
+          qWarning() << "ERROR: " << query.lastError().text();
+
+        auto count = 0;
+        QList<Contact*> *contacts = new QList<Contact*>();
+        while (query.next()) {
+
+
+                Contact *contact = new Contact();
+                contact->id = query.value(0).toInt();
+                contact->GUID = query.value(1).toString();
+                contact->firstname = query.value(2).toString();
+                contact->lastname = query.value(3).toString();
+                contact->email = query.value(4).toString();
+                contact->tel = query.value(5).toString();
+                contact->category = query.value(6).toString();
+                contact->city = query.value(7).toString();
+                contact->birth_day = query.value(8).toString();
+                contact->country = query.value(9).toString();
+                contact->list = query.value(10).toString();
+                contact->company = query.value(11).toString();
+
+                contacts->append(contact);
+
+                count++;
+                emit countDown((count * 100) / (idList.count() * 2));
+        }
+        csv->writeCsvFile(*contacts, path);
+
+        cleanDatabase(db);
+    });
 }
 
+QFuture<QList<QStringList>> DatabaseManager::requestDataList(QString fieldSearched, QString fieldValue)
+{
+    return QtConcurrent::run([this, fieldSearched, fieldValue]()
+    {
+
+        auto db = setupDatabase();
+        QSqlQuery query;
+
+        int nbCategory = selectDistinct("category");
+        int nbCompany = selectDistinct("company");
+        int nbList = selectDistinct("list");
+
+        query.exec("SELECT * FROM contacts WHERE " + fieldSearched + " = ?");
+        query.addBindValue(fieldValue);
+
+        if(!query.exec())
+          qWarning() << "ERROR: " << query.lastError().text();
+        QList<QStringList> list;
+        qRegisterMetaType<QList<QStringList>>("QList<QStringList>");
+        QList<QStringList> totalList;
+        qRegisterMetaType<QList<QStringList>>("QList<QStringList>");
+
+        while (query.next()) {
+
+            QStringList item;
+                for(int i = 0; i < 12; i++)
+                {
+                    //qDebug() << __FUNCTION__ << __LINE__ << query.value(i);
+                    item.append(query.value(i).toString());
+
+                }
+                list.append(item);
+                totalList.append(item);
+                if(list.count() >= 10000)
+                {
+                    QFuture<void> future = QtConcurrent::run(this, &DatabaseManager::addResults, list);
+                    list.clear();
+                }
 
 
-bool DatabaseManager::createTable()
+            }
+        QFuture<void> future = QtConcurrent::run(this, &DatabaseManager::addResults, list);
+        QFuture<void> futureStats = QtConcurrent::run(this, &DatabaseManager::addStats, totalList.count(), nbCategory, nbCompany, nbList);
+
+        cleanDatabase(db);
+        return totalList;
+
+    });
+}
+
+QFuture<QList<QStringList>> DatabaseManager::selectAll()
+{
+    return QtConcurrent::run([this]()
+    {
+
+        auto db = setupDatabase();
+        QSqlQuery query;
+
+        int nbCategory = selectDistinct("category");
+        int nbCompany = selectDistinct("company");
+        int nbList = selectDistinct("list");
+
+        query.exec("SELECT * FROM contacts");
+
+        if(!query.exec())
+          qWarning() << "ERROR: " << query.lastError().text();
+        QList<QStringList> list;
+        qRegisterMetaType<QList<QStringList>>("QList<QStringList>");
+        QList<QStringList> totalList;
+        qRegisterMetaType<QList<QStringList>>("QList<QStringList>");
+
+        while (query.next()) {
+
+            QStringList item;
+                for(int i = 0; i < 12; i++)
+                {
+                    //qDebug() << __FUNCTION__ << __LINE__ << query.value(i);
+                    item.append(query.value(i).toString());
+
+                }
+                list.append(item);
+                totalList.append(item);
+                if(list.count() >= 10000)
+                {
+                    QFuture<void> future = QtConcurrent::run(this, &DatabaseManager::addResults, list);
+                    list.clear();
+                }
+
+
+            }
+        QFuture<void> future = QtConcurrent::run(this, &DatabaseManager::addResults, list);
+        QFuture<void> futureStats = QtConcurrent::run(this, &DatabaseManager::addStats, totalList.count(), nbCategory, nbCompany, nbList);
+
+        cleanDatabase(db);
+        return totalList;
+
+    });
+
+}
+QSqlDatabase DatabaseManager::setupDatabase()
 {
 
-    db                      = QSqlDatabase::addDatabase("QSQLITE");
+    const QString driver("QSQLITE");
+
     QString appDataLocation = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     QDir    dir(appDataLocation);
     if (!dir.exists()) {
         dir.mkdir(appDataLocation);
         qDebug() << __FUNCTION__ << __LINE__ << "mkdir" << appDataLocation;
     }
-    QString dbPath = appDataLocation + "/testdb.db";
+    QString dbPath = appDataLocation + "/contactdb.db";
     qDebug() << "dbPath" << dbPath;
-    db.setDatabaseName(dbPath);
-    if (!db.open()) {
-        qWarning() << "Unable to open db" << dbPath;
-        return false;
-    }
-    qDebug() << __FUNCTION__ << __LINE__ << "creating table 'contacts'";
-    QString tblFilesCreate = "CREATE TABLE IF NOT EXISTS contacts ("
-                             "id        INTEGER PRIMARY KEY AUTOINCREMENT, "
-                             "GUID      STRING,"
-                             "firstname STRING,"
-                             "lastname  STRING,"
-                             "email     STRING,"
-                             "tel       STRING,"
-                             "category  STRING,"
-                             "city      STRING,"
-                             "birth_day STRING,"
-                             "country   STRING,"
-                             "list      STRING,"
-                             "company   STRING"
-                             ")";
-    QSqlQuery query;
-    query.exec(tblFilesCreate);
-    if (query.lastError().isValid()) {
-        qWarning() << query.lastError().text();
-        return false;
-    }
-    return true;
 
+    if (QSqlDatabase::isDriverAvailable(driver))
+    {
+        qDebug() << "[ fn:" << __FUNCTION__ << "] -" << "( l:" << __LINE__ << ")" << "-> Db path:" << dbPath;
+
+        if (QSqlDatabase::contains())
+        {
+            if (!QSqlDatabase::database().open())
+                qDebug() << "[ fn:" << __FUNCTION__ << "] -" << "( l:" << __LINE__ << ")" << "Error:" << QSqlDatabase::database().lastError().text();
+            return QSqlDatabase::database();
+        }
+        else
+        {
+            QSqlDatabase db{ QSqlDatabase::addDatabase(driver) };
+            db.setDatabaseName(dbPath);
+            if (!db.open())
+                qDebug() << "[ fn:" << __FUNCTION__ << "] -" << "( l:" << __LINE__ << ")" << "Error:" << db.lastError().text();
+            return db;
+        }
+    }
+    else
+    {
+        qDebug() << "[ fn:" << __FUNCTION__ << "] -" << "( l:" << __LINE__ << ")" << "No driver " << driver << " available";
+    }
+    return QSqlDatabase::database();
 }
+
+void DatabaseManager::initQuery()
+{
+
+    auto db = setupDatabase();
+
+        QSqlQuery initQuery(db);
+        initQuery.prepare("CREATE TABLE IF NOT EXISTS contacts ("
+                                 "id        INTEGER PRIMARY KEY AUTOINCREMENT, "
+                                 "GUID      STRING,"
+                                 "firstname STRING,"
+                                 "lastname  STRING,"
+                                 "email     STRING,"
+                                 "tel       STRING,"
+                                 "category  STRING,"
+                                 "city      STRING,"
+                                 "birth_day STRING,"
+                                 "country   STRING,"
+                                 "list      STRING,"
+                                 "company   STRING"
+                                 ")");
+        initQuery.exec();
+
+        if (!initQuery.isActive())
+            qDebug() << "[ fn:" << __FUNCTION__ << "] -" << "( l:" << __LINE__ << ")" << "-> Error:" << initQuery.lastError().text();
+
+    cleanDatabase(db);
+}
+
+void DatabaseManager::cleanDatabase(QSqlDatabase &db)
+{
+    {
+        qDebug() << "[ fn:" << __FUNCTION__ << "] -" << "( l:" << __LINE__ << ")" << "-> Conns:" << db.connectionNames();
+        db.close();
+    }
+    QSqlDatabase::removeDatabase(QSqlDatabase::defaultConnection);
+}
+
+

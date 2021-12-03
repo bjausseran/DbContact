@@ -1,5 +1,5 @@
 QT -= gui
-QT += sql
+QT += sql concurrent
 
 TEMPLATE = lib
 DEFINES += BDDCONTACTLIBRARY_LIBRARY
