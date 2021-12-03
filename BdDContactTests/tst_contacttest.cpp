@@ -7,7 +7,10 @@
 class ContactTest : public QObject
 {
     Q_OBJECT
+    CsvManager *csvManager;
     DatabaseManager *dbManager;
+    Contact *contact;
+    QList<Contact*> contacts;
     int _testState=1;
 
 public:
@@ -18,7 +21,7 @@ private slots:
     void initTestCase();
     void cleanupTestCase();
     void test_case1(QStringList data);
-
+    void test_case2();
 
 };
 
@@ -52,6 +55,14 @@ void ContactTest::cleanupTestCase()
 void ContactTest::test_case1(QStringList requestList)
 {
     QString string;
+    if(_testState==4){
+        for(int i=0; i<requestList.size(); i++)
+        {
+            string += requestList[i];
+        }
+        qDebug() <<__FUNCTION__ <<"TestExport "<< string;
+        QCOMPARE(string, "7TestExport");
+    }
     if(_testState==3){
         for(int i=0; i<requestList.size(); i++)
         {
@@ -79,10 +90,28 @@ void ContactTest::test_case1(QStringList requestList)
         }
         qDebug() <<__FUNCTION__ <<"TestInsert "<< string;
         QCOMPARE(string, "1TestGUIDfirstnamelastnameemailtelcategorycitybirth_daycountrylistcompany");
-        dbManager->deleteData("id","1");
+        dbManager->deleteData("id","3");
         _testState=2;
-        dbManager->requestData("id","1");
+        dbManager->requestData("id","3");
     }
+}
+
+void ContactTest::test_case2()
+{
+    csvManager =new CsvManager();
+    contact =new Contact();
+
+    contact->birth_day="TestExport";
+
+    contacts.append(contact);
+
+    csvManager->writeCsvFile(contacts,"../../DbContact/TestFolder/myFile5.csv");
+    dbManager->ReadFile("../../DbContact/TestFolder/myFile5.csv");
+    dbManager->requestData("birth_day","TestExport");
+
+
+
+
 }
 
 QTEST_MAIN(ContactTest)
