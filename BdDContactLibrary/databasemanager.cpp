@@ -170,6 +170,12 @@ void DatabaseManager::onExportCsvRequest(QStringList idList, QString path)
     qDebug() << __FUNCTION__ << __LINE__ ;
     selectDataForExport(idList, path);
 }
+void DatabaseManager::exportCsvByField(QString field, QString value, QString path)
+{
+
+    qDebug() << __FUNCTION__ << __LINE__ ;
+    selectDataForExport(field, value, path);
+}
 
 
 void DatabaseManager::cleanDb(QSqlDatabase &db) {
@@ -305,6 +311,50 @@ QFuture<void> DatabaseManager::selectDataForExport(QStringList idList, QString p
 
                 count++;
                 emit countDown((count * 100) / (idList.count() * 2));
+        }
+        csv->writeCsvFile(*contacts, path);
+
+        cleanDatabase(db);
+    });
+}
+
+QFuture<void> DatabaseManager::selectDataForExport(QString field, QString value, QString path)
+{
+    return QtConcurrent::run([this, field, value, path]()
+    {
+
+        auto db = setupDatabase();
+        QSqlQuery query;
+
+
+        query.prepare("SELECT * FROM contacts WHERE "+ field +" = ?");
+        query.addBindValue(value);
+
+        if(!query.exec())
+          qWarning() << "ERROR: " << query.lastError().text();
+
+        auto count = 0;
+        QList<Contact*> *contacts = new QList<Contact*>();
+        while (query.next()) {
+
+
+                Contact *contact = new Contact();
+                contact->id = query.value(0).toInt();
+                contact->GUID = query.value(1).toString();
+                contact->firstname = query.value(2).toString();
+                contact->lastname = query.value(3).toString();
+                contact->email = query.value(4).toString();
+                contact->tel = query.value(5).toString();
+                contact->category = query.value(6).toString();
+                contact->city = query.value(7).toString();
+                contact->birth_day = query.value(8).toString();
+                contact->country = query.value(9).toString();
+                contact->list = query.value(10).toString();
+                contact->company = query.value(11).toString();
+
+                contacts->append(contact);
+
+                count++;
         }
         csv->writeCsvFile(*contacts, path);
 

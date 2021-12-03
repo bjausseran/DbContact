@@ -34,6 +34,9 @@ int main(int argc, char *argv[])
     //                       Read file, import in DB
     //dbMana->ReadFile("C:/CSVs/");
 
+    //____________________________________________________________________
+    //                       Export by field value
+    //dbMana->exportCsvByField("company", "Facebook", "C:/CSVs/Facebook.csv");
 
     //____________________________________________________________________
     //                       Update all contact with ynov as company

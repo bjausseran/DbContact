@@ -23,6 +23,7 @@ class BDDCONTACTLIBRARY_EXPORT DatabaseManager : public QObject
     void initQuery();
     void cleanDatabase(QSqlDatabase &db);
     QFuture<void> selectDataForExport(QStringList idList, QString path);
+    QFuture<void> selectDataForExport(QString field, QString value, QString path);
 public:
     explicit DatabaseManager(QObject *parent = nullptr);
 
@@ -38,6 +39,7 @@ public:
     int selectDistinct(QString field);
 
     QFuture<QList<QStringList>> requestDataList(QString fieldSearched, QString fieldValue);
+    void exportCsvByField(QString field, QString value, QString path);
 signals:
     void requestCsvCreation(Contact contacts[], QString filename);
     void sendContactData(QStringList list);
