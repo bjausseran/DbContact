@@ -208,14 +208,20 @@ bool  MainWindow::checkField(QString field)
 
 void MainWindow::on_exportCsv_btn_clicked()
 {
+    QString path = csvExportPath->text();
+    int rowCount = tableWidget->rowCount();
+
+    if(path == "" || rowCount == 0) return;
+
     QStringList tableIds;
 
-    for(int i = 0; i < tableWidget->rowCount(); i++)
+    for(int i = 0; i < rowCount; i++)
     {
         tableIds.push_back(tableWidget->item(i, 0)->text());
     }
 
+
     qDebug() << __FUNCTION__ << __LINE__ << "Id list count : " << tableIds.count();
-    emit exportCsv(tableIds, csvExportPath->text());
+    emit exportCsv(tableIds, path);
 }
 
