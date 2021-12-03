@@ -63,6 +63,13 @@
           </widget>
          </item>
          <item>
+          <widget class="Line" name="line_7">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
           <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0">
            <item>
             <widget class="QPushButton" name="loadCsv_btn">
@@ -86,7 +93,7 @@
            <item>
             <widget class="QLineEdit" name="loadCsv_edit">
              <property name="placeholderText">
-              <string>File or folder</string>
+              <string>C:/CSVs/ (File or folder)</string>
              </property>
             </widget>
            </item>
@@ -643,9 +650,32 @@
           </property>
          </spacer>
         </item>
+        <item>
+         <spacer name="horizontalSpacer_3">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Preferred</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>320</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
        </layout>
       </item>
      </layout>
+    </item>
+    <item>
+     <widget class="Line" name="line_6">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
     </item>
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -654,56 +684,68 @@
         <item>
          <widget class="QLabel" name="nbLine_lbl">
           <property name="text">
-           <string>Nb lines</string>
+           <string>Nb lines :</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QLabel" name="nbLine_edit">
           <property name="text">
-           <string>50</string>
+           <string>0</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QLabel" name="nbCategory_lbl">
           <property name="text">
-           <string>Contact par catégorie</string>
+           <string>Category nb :</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QLabel" name="nbCategory_edit">
           <property name="text">
-           <string>10</string>
+           <string>0</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QLabel" name="nbCompany_lbl">
           <property name="text">
-           <string>Contact par société</string>
+           <string>Company nb :</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QLabel" name="nbCompany_edit">
           <property name="text">
-           <string>10</string>
+           <string>0</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QLabel" name="nbList_lbl">
           <property name="text">
-           <string>Contact par liste</string>
+           <string>List nb :</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QLabel" name="nbList_edit">
           <property name="text">
-           <string>70</string>
+           <string>0</string>
           </property>
          </widget>
         </item>

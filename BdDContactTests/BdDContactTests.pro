@@ -1,6 +1,6 @@
 QT += testlib
 QT -= gui
-QT += sql
+QT += sql concurrent
 
 CONFIG += qt console warn_on depend_includepath testcase
 CONFIG -= app_bundle
