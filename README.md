@@ -1,5 +1,12 @@
 # BdD contact
 
+### Groupe
+
+###### Benoît JAUSSERAN
+###### Aymeric QUERET
+
+### Notation
+
 Tests : 
 - Les tests fonctionnaient durant une bonne partie du dev, cependant avec l'ajout des threads, ils ont cassés. 
 - Pour avoir des tests fonctionnels, regarder a branche Test avant le merge.
