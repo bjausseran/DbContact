@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
 
     QObject::connect(dbMana, &DatabaseManager::addResults, &w, &MainWindow::addResults);
     QObject::connect(dbMana, &DatabaseManager::addStats, &w, &MainWindow::addStats);
+    QObject::connect(dbMana, &DatabaseManager::countDown, &w, &MainWindow::onProgressReceived);
 
     QObject::connect(&w, &MainWindow::requestContactData, dbMana, [dbMana](int id){dbMana->requestData("id",QString::number(id));});
     QObject::connect(dbMana, &DatabaseManager::sendContactData, &w, &MainWindow::onContactDataReceived);

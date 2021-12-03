@@ -8,6 +8,7 @@ DatabaseManager::DatabaseManager(QObject *parent) : QObject(parent)
 {
     csv = new CsvManager();
     connect(csv, &CsvManager::fileRead, this, &DatabaseManager::onFileRead);
+    connect(csv, &CsvManager::countDown, this, &DatabaseManager::countDown);
     connect(this, &DatabaseManager::requestCsvCreation, csv, &CsvManager::onCsvRequested);
 
 
@@ -123,6 +124,7 @@ void DatabaseManager::onFileRead(QStringList list)
         contact->list = wordList.at(10);
         contact->company = wordList.at(11);
 
+
         contacts->append(contact);
     }
 
@@ -198,6 +200,7 @@ void DatabaseManager::addDataFromList(QList<Contact*> contacts)
 
     //int lenght = sizeof(contacts)/sizeof (contacts[0]);
 
+    auto count = 0;
     for (int i = 0; i < contacts.length(); i++) {
 
         insertQuery.bindValue(":GUID", contacts.at(i)->GUID);
@@ -212,6 +215,8 @@ void DatabaseManager::addDataFromList(QList<Contact*> contacts)
         insertQuery.bindValue(":list", contacts.at(i)->list);
         insertQuery.bindValue(":company", contacts.at(i)->company);
         insertQuery.exec();
+
+         emit countDown((contacts.length() + count * 100) / (contacts.length() * 2));
     }
     db.commit();
 
@@ -277,6 +282,7 @@ QFuture<void> DatabaseManager::selectDataForExport(QStringList idList, QString p
         if(!query.exec())
           qWarning() << "ERROR: " << query.lastError().text();
 
+        auto count = 0;
         QList<Contact*> *contacts = new QList<Contact*>();
         while (query.next()) {
 
@@ -296,6 +302,9 @@ QFuture<void> DatabaseManager::selectDataForExport(QStringList idList, QString p
                 contact->company = query.value(11).toString();
 
                 contacts->append(contact);
+
+                count++;
+                emit countDown((count * 100) / (idList.count() * 2));
         }
         csv->writeCsvFile(*contacts, path);
 

@@ -80,6 +80,7 @@ MainWindow::MainWindow(QWidget *parent)
     nbCompanyLabel = ui->nbCompany_edit;
     nbListLabel = ui->nbList_edit;
 
+    progressBar = ui->progressBar;
 
     createTableLayout();
 }
@@ -117,7 +118,7 @@ void MainWindow::onContactDataReceived(QStringList list)
 void MainWindow::createTableLayout()
 {
     tableWidget->setColumnCount(5);
-    tableWidget->setColumnWidth(0, 50);
+    tableWidget->setColumnWidth(0, 80);
 
     this->tableWidget->setEditTriggers(QTableWidget::NoEditTriggers);
 
@@ -146,6 +147,10 @@ void MainWindow::addStats(int nbLine, int nbCategory, int nbCompany, int nbList)
     nbListLabel->setText(QString::number(nbList));
 
     emit requestContactData(tableWidget->item(0, 0)->text().toInt());
+}
+void MainWindow::onProgressReceived(int count)
+{
+    progressBar->setValue(count);
 }
 
 void MainWindow::onContactSelected(const QModelIndex &index)
@@ -177,11 +182,6 @@ void MainWindow::on_delete_btn_clicked()
     refreshUI();
 }
 
-
-void MainWindow::on_updateList_btn_clicked()
-{
-    emit requestContactList();
-}
 
 
 void MainWindow::on_loadCsv_btn_clicked()

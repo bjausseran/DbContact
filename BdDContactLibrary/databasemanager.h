@@ -43,6 +43,7 @@ signals:
     void sendContactData(QStringList list);
     void addResults(QList<QStringList> values);
     void addStats(int nbLine, int nbCategory, int nbCompany, int nbList);
+    void countDown(int count);
 public slots:
     void onFileRead(QStringList list);
     void onUpdateRequest(QStringList fieldsSearched, QStringList fieldsValue, QStringList fieldsUpdated, QStringList newValues);

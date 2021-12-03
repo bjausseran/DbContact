@@ -8,6 +8,7 @@
 #include <QDebug>
 #include <QFuture>
 #include <QtConcurrent>
+#include <QProgressBar>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -40,6 +41,8 @@ class MainWindow : public QMainWindow
 
     QLineEdit *csvExportPath;
 
+    QProgressBar *progressBar;
+
 
     QLabel *nbLineLabel;
     QLabel *nbCategoryLabel;
@@ -62,6 +65,7 @@ public slots:
     void addResults(QList<QStringList> values);
     void addStats(int nbLine, int nbCategory, int nbCompany, int nbList);
     void onContactSelected(const QModelIndex &index);
+    void onProgressReceived(int count);
 
 signals:
     void filterData(QString field, QString value);
@@ -72,11 +76,10 @@ signals:
     void requestContactData(int id);
     void updateContact(QStringList fieldsSearched, QStringList fieldsValue, QStringList fieldsUpdated, QStringList newValues);
 private slots:
+
     void on_update_btn_clicked();
 
     void on_delete_btn_clicked();
-
-    void on_updateList_btn_clicked();
 
     void on_loadCsv_btn_clicked();
 

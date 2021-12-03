@@ -94,7 +94,7 @@ void CsvManager::writeCsvFile(QList<Contact*> contacts, QString fileName)
     QTextStream out(&file);
 
 
-
+auto count = 0;
     for(int i = 0; i < contacts.length(); i++)
     {
         out << contacts.value(i)->id
@@ -121,6 +121,9 @@ void CsvManager::writeCsvFile(QList<Contact*> contacts, QString fileName)
             << ","
             << contacts.value(i)->company
             << "\n";
+        count++;
+
+        emit countDown(((contacts.count() + count) * 100) / (contacts.count() * 2));
     }
     emit fileWrote(fileName);
 }

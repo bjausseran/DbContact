@@ -19,6 +19,7 @@ public:
 signals:
     void fileRead(QStringList data);
     void fileWrote(QString file);
+    void countDown(int count);
 
 public slots:
     void onCsvRequested(Contact contacts[], QString fileName);

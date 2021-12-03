@@ -104,7 +104,7 @@
            <item>
             <widget class="QPushButton" name="filter_btn">
              <property name="text">
-              <string>Filter</string>
+              <string>Refresh</string>
              </property>
             </widget>
            </item>
@@ -185,6 +185,13 @@
            </item>
           </layout>
          </item>
+         <item>
+          <widget class="QProgressBar" name="progressBar">
+           <property name="value">
+            <number>0</number>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
@@ -202,13 +209,6 @@
         </property>
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_3">
-          <item>
-           <widget class="QPushButton" name="updateList_btn">
-            <property name="text">
-             <string>Update</string>
-            </property>
-           </widget>
-          </item>
           <item>
            <widget class="QLabel" name="label_2">
             <property name="font">
