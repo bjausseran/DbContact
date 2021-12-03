@@ -75,46 +75,7 @@ void CsvManager::writeCsvFile(Contact contacts[], QString fileName)
     emit fileWrote(fileName);
 }
 
-void CsvManager::writeCsvFile(QList<Contact *> contacts, QString fileName)
-{
-    QFile file(fileName);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
-        return;
 
-    QTextStream out(&file);
-
-
-    int lenght = sizeof(contacts)/sizeof(contacts[0]);
-
-    for(int i = 0; i < lenght; i++)
-    {
-        out << contacts[i]->id
-            << ","
-            << contacts[i]->GUID
-            << ","
-            << contacts[i]->firstname
-            << ","
-            << contacts[i]->lastname
-            << ","
-            << contacts[i]->email
-            << ","
-            << contacts[i]->tel
-            << ","
-            << contacts[i]->category
-            << ","
-            << contacts[i]->city
-            << ","
-            << contacts[i]->birth_day
-            << ","
-            << contacts[i]->country
-            << ","
-            << contacts[i]->list
-            << ","
-            << contacts[i]->company
-            << "\n";
-    }
-    emit fileWrote(fileName);
-}
 
 void CsvManager::onCsvRequested(Contact contacts[], QString fileName)
 {

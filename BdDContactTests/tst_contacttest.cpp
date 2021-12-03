@@ -55,6 +55,7 @@ void ContactTest::cleanupTestCase()
 void ContactTest::test_case1(QStringList requestList)
 {
     QString string;
+
     if(_testState==4){
         for(int i=0; i<requestList.size(); i++)
         {

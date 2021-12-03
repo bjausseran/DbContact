@@ -13,7 +13,7 @@ public:
     explicit CsvManager(QObject *parent = nullptr);
     void readCsvfile(QString path);
     void writeCsvFile(Contact contacts[], QString fileName);
-    void writeCsvFile(QList<Contact*> contacts, QString fileName);
+
 
 
 
